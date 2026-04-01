@@ -1,0 +1,546 @@
+.nomina-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 40px;
+  font-family: 'Satoshi', sans-serif;
+}
+
+.nomina-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
+}
+
+.nomina-title {
+  font-family: 'Clash Display', sans-serif;
+  font-size: 28px;
+  font-weight: 500;
+  color: #262632;
+  margin: 0;
+}
+
+.select-recurrencia {
+  height: 48px;
+  padding: 0 16px;
+  border: 1px solid rgba(38,38,50,0.3);
+  border-radius: 12px;
+  font-size: 15px;
+  font-family: 'Satoshi', sans-serif;
+  color: #262632;
+  background: white;
+  cursor: pointer;
+  min-width: 220px;
+}
+
+.btn-recurrencia-set {
+  height: 48px;
+  padding: 0 24px;
+  border: 1px solid rgba(38,38,50,0.3);
+  border-radius: 12px;
+  font-size: 15px;
+  font-family: 'Satoshi', sans-serif;
+  color: #262632;
+  background: white;
+  cursor: default;
+}
+
+/* Cards */
+.nomina-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.nomina-card {
+  background: white;
+  border-radius: 20px;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+}
+
+.nomina-card-label {
+  font-size: 20px;
+  font-weight: 500;
+  color: #262632;
+  margin: 0;
+}
+
+.nomina-card-value {
+  font-family: 'Clash Display', sans-serif;
+  font-size: 44px;
+  font-weight: 500;
+  color: #262632;
+  margin: 0;
+  line-height: 1;
+}
+
+/* Tabla */
+.nomina-table-card {
+  background: white;
+  border-radius: 20px;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.nomina-table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nomina-table-title {
+  font-family: 'Clash Display', sans-serif;
+  font-size: 20px;
+  font-weight: 500;
+  color: #262632;
+  margin: 0;
+}
+
+.btn-descargar {
+  background: #FF6700;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-family: 'Satoshi', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-descargar:hover { background: #e55c00; }
+.btn-descargar:disabled { opacity: 0.6; cursor: default; }
+
+.nomina-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.nomina-table thead tr {
+  background: #F2F4F8;
+}
+
+.nomina-table th {
+  padding: 16px 20px;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(38,38,50,0.7);
+  white-space: nowrap;
+}
+
+.nomina-table td {
+  padding: 20px;
+  font-size: 14px;
+  color: #262632;
+  border-bottom: 1px solid #EAEAEA;
+}
+
+.badge {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.badge-activo {
+  background: rgba(68,187,126,0.12);
+  color: #44BB7E;
+}
+
+.badge-excepcion {
+  background: rgba(255,103,0,0.1);
+  color: #FF6700;
+}
+
+.btn-accion {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  padding: 4px;
+}
+
+/* Paginación */
+.nomina-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding-top: 8px;
+}
+
+.nomina-pagination button {
+  width: 36px;
+  height: 36px;
+  border: 1px solid #EAEAEA;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  font-size: 14px;
+  color: #262632;
+  transition: all 0.2s;
+}
+
+.nomina-pagination button:hover { background: #F2F4F8; }
+.nomina-pagination button.active { background: #006AD8; color: white; border-color: #006AD8; }
+.nomina-pagination button:disabled { opacity: 0.4; cursor: default; }
+
+/* AvalPay */
+.nomina-aval-card {
+  background: white;
+  border-radius: 20px;
+  padding: 40px;
+  display: flex;
+  flex-direction: row;
+  gap: 64px;
+  align-items: center;
+  justify-content: center;
+}
+
+.nomina-aval-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  min-width: 200px;
+}
+
+.aval-logo {
+  width: 165px;
+  height: auto;
+  object-fit: contain;
+}
+
+.aval-divider {
+  width: 100%;
+  height: 1px;
+  background: rgba(38,38,50,0.08);
+}
+
+.aval-label {
+  font-size: 18px;
+  color: #262632;
+  margin: 0;
+  text-align: center;
+}
+
+.aval-total {
+  font-family: 'Clash Display', sans-serif;
+  font-size: 40px;
+  font-weight: 500;
+  color: #262632;
+  margin: 0;
+  line-height: 1;
+}
+
+.nomina-aval-right {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+  max-width: 500px;
+}
+
+.aval-subtitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #262632;
+  margin: 0;
+}
+
+.aval-date-btn {
+  height: 48px;
+  padding: 0 16px;
+  border: 1px solid #EEEEEE;
+  border-radius: 12px;
+  font-size: 15px;
+  font-family: 'Satoshi', sans-serif;
+  color: rgba(38,38,50,0.7);
+  width: 100%;
+  background: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.aval-date-btn.error { border-color: #FF4F4F; }
+
+.aval-error {
+  color: #FF4F4F;
+  font-size: 13px;
+  margin: 0;
+}
+
+.btn-depositar {
+  width: 100%;
+  height: 52px;
+  background: #FF6700;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-family: 'Satoshi', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-depositar:hover { background: #e55c00; }
+.btn-depositar:disabled { opacity: 0.6; cursor: default; }
+
+.aval-disclaimer {
+  font-size: 13px;
+  color: rgba(38,38,50,0.6);
+  margin: 0;
+  text-align: center;
+}
+
+/* Loading */
+.nomina-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 60vh;
+  gap: 16px;
+  color: #262632;
+}
+
+/* Calendario */
+.cal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cal-modal {
+  display: flex;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+}
+
+.cal-header {
+  background: #006AD8;
+  color: white;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 120px;
+  justify-content: flex-end;
+}
+
+.cal-header-label {
+  font-size: 11px;
+  opacity: 0.8;
+  margin: 0;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.cal-header-day {
+  font-size: 36px;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.1;
+}
+
+.cal-header-month {
+  font-size: 22px;
+  margin: 0;
+}
+
+.cal-body {
+  background: white;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 280px;
+}
+
+.cal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0 8px;
+}
+
+.cal-month-year {
+  font-size: 14px;
+  font-weight: 500;
+  color: #262632;
+}
+
+.cal-arrows {
+  display: flex;
+  gap: 4px;
+}
+
+.cal-arrows button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  color: #262632;
+  padding: 4px 8px;
+  border-radius: 50%;
+  transition: background 0.2s;
+  line-height: 1;
+}
+
+.cal-arrows button:hover { background: #F2F4F8; }
+
+.cal-days-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.cal-days-header span {
+  font-size: 12px;
+  color: rgba(38,38,50,0.6);
+  padding: 4px 0;
+  font-weight: 500;
+  text-align: center;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.cal-day {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: none;
+  border-radius: 50%;
+  font-size: 13px;
+  color: #262632;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  margin: auto;
+  padding: 0;
+}
+
+.cal-day:hover:not(:disabled):not(.selected) { background: #F2F4F8; }
+.cal-day.selected { background: #006AD8; color: white; }
+.cal-day.today { font-weight: 700; color: #006AD8; }
+.cal-day:disabled { cursor: default; opacity: 0; }
+
+.cal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #F2F4F8;
+  margin-top: 4px;
+}
+
+.cal-actions button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: #006AD8;
+  padding: 8px 12px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+  transition: background 0.2s;
+}
+
+.cal-actions button:hover { background: #F2F4F8; }
+
+/* Progress Modal */
+.progress-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 4000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.progress-modal {
+  background: white;
+  border-radius: 20px;
+  padding: 40px;
+  width: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+}
+
+.progress-title {
+  font-family: 'Clash Display', sans-serif;
+  font-size: 20px;
+  font-weight: 500;
+  color: #262632;
+  margin: 0;
+}
+
+.progress-bar-bg {
+  width: 100%;
+  height: 12px;
+  background: #F2F4F8;
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #006AD8, #FF6700);
+  border-radius: 100px;
+  transition: width 0.3s ease;
+}
+
+.progress-percent {
+  font-family: 'Clash Display', sans-serif;
+  font-size: 32px;
+  font-weight: 600;
+  color: #262632;
+  margin: 0;
+}
+
+.btn-progress-close {
+  background: #006AD8;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 32px;
+  font-size: 15px;
+  font-family: 'Satoshi', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-progress-close:hover { background: #0B35B8; }

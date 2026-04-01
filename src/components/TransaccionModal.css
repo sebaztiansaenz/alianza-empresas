@@ -1,0 +1,149 @@
+.tmodal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tmodal-content {
+  background: white;
+  border-radius: 20px;
+  width: 80%;
+  max-width: 1100px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+}
+
+.tmodal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0 4px;
+}
+
+.tmodal-header h3 {
+  font-family: 'Clash Display', sans-serif;
+  font-size: 20px;
+  font-weight: 500;
+  color: #262632;
+  margin: 0;
+}
+
+.tmodal-close {
+  background: #C9C7C7;
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  color: white;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tmodal-close:hover { background: #aaa; }
+
+.tmodal-table-wrap {
+  overflow-x: auto;
+}
+
+.tmodal-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tmodal-table thead tr {
+  background: #F2F4F8;
+}
+
+.tmodal-table th {
+  padding: 14px 16px;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(38,38,50,0.7);
+  white-space: nowrap;
+  font-family: 'Satoshi', sans-serif;
+}
+
+.tmodal-table td {
+  padding: 18px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #262632;
+  border-bottom: 1px solid #EAEAEA;
+  font-family: 'Satoshi', sans-serif;
+  white-space: nowrap;
+}
+
+.tmodal-badge {
+  display: inline-block;
+  padding: 5px 14px;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  font-family: 'Satoshi', sans-serif;
+}
+
+.tmodal-divider {
+  height: 1px;
+  background: rgba(38,38,50,0.06);
+}
+
+.tmodal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  padding: 8px 0 12px;
+}
+
+.btn-excel {
+  width: 280px;
+  height: 48px;
+  background: #007F4C;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-family: 'Satoshi', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-excel:hover { background: #006040; }
+
+.btn-pdf {
+  width: 280px;
+  height: 48px;
+  background: #FF6700;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-family: 'Satoshi', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-pdf:hover { background: #e55c00; }
