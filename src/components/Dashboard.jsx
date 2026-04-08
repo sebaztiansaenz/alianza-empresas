@@ -1,6 +1,6 @@
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 import { useEffect, useState } from 'react'
-import { collection, query, where, getDocs, getCountFromServer, doc, getDoc } from 'firebase/firestore'
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore'
 import { db } from '../firebase'
 import { useUser } from '../UserContext'
 import Sidebar from "./Sidebar";
@@ -10,21 +10,21 @@ import DetalleMovimientos from "./DetalleMovimientos";
 import HistorialNovedades from "./HistorialNovedades";
 import BarChart from "./BarChart";
 import FirmarConvenioModal from "./FirmarConvenioModal";
+import SolicitudCredito from "./SolicitudCredito";
+import RentaFija from "./RentaFija";
 import "./Dashboard.css";
 
 const mesesCortos = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
 
 function formatMoney(val) {
   if (!val && val !== 0) return "$ 0";
-  const ceiled = Math.ceil(Number(val)).toString();
+  const ceiled = Math.round(Number(val)).toString();
   let result = "";
   let count = 0;
   for (let i = ceiled.length - 1; i >= 0; i--) {
     result = ceiled[i] + result;
     count++;
-    if (count % 3 === 0 && i !== 0) {
-      result = "." + result;
-    }
+    if (count % 3 === 0 && i !== 0) result = "." + result;
   }
   return `$ ${result}`;
 }
@@ -48,9 +48,10 @@ function calcYAxisIntervals(maxValue) {
 }
 
 function formatYLabel(value) {
-  if (value >= 1000000) return `${(value / 1000000).toFixed(value % 1000000 === 0 ? 0 : 1)}M`;
-  if (value >= 1000) return `${(value / 1000).toFixed(value % 1000 === 0 ? 0 : 1)}k`;
-  return value.toFixed(0);
+  const v = Math.round(value);
+  if (v >= 1000000) return `${Math.round(v / 1000000)}M`;
+  if (v >= 1000) return `${Math.round(v / 1000)}k`;
+  return `${v}`;
 }
 
 function General() {
@@ -67,6 +68,7 @@ function General() {
   const [transList, setTransList] = useState([]);
   const [ahorrosList, setAhorrosList] = useState([]);
   const [tab, setTab] = useState("ahorrado");
+  const [totalBarras, setTotalBarras] = useState(0);
 
   useEffect(() => {
     if (!userData?.empresaRef) return;
@@ -75,7 +77,8 @@ function General() {
       try {
         const ahorrosQuery = query(
           collection(db, "ahorros"),
-          where("company", "==", userData.empresaRef)
+          where("company", "==", userData.empresaRef),
+          where("AhorrosDocPdf1", "!=", "")
         );
         const retiradosQuery = query(
           collection(db, "NovedadesAhorros"),
@@ -84,39 +87,39 @@ function General() {
         );
         const transQuery = query(
           collection(db, "transactions"),
-          where("empresaId", "==", userData.empresaId),
           where("transactionType", "==", "Depositado"),
-          where("status", "==", "APPROVED")
+          where("empresaId", "==", userData.empresaRef.id),
+          where("processUrl", "!=", "")
         );
 
         const [ahorrosSnap, retiradosSnap, transSnap] = await Promise.all([
           getDocs(ahorrosQuery),
-          getCountFromServer(retiradosQuery),
+          getDocs(retiradosQuery),
           getDocs(transQuery),
         ]);
 
         const ahorrosListLocal = ahorrosSnap.docs.map(d => d.data());
-
-        const proximoAhorro = ahorrosListLocal.reduce((sum, a) =>
+        const retiradosUIDs = new Set(
+          retiradosSnap.docs.map(d => d.data().usuarioRef?.id).filter(Boolean)
+        );
+        const totalRetirados = retiradosSnap.size;
+        const ahorrosActivos = ahorrosListLocal.filter(a => !retiradosUIDs.has(a.UserID));
+        const proximoAhorro = ahorrosActivos.reduce((sum, a) =>
           sum + (a.Total_Savings_PreApproval || 0), 0
         );
-
         let beneficios = 0;
-        ahorrosListLocal.forEach(a => {
+        ahorrosActivos.forEach(a => {
           if (Array.isArray(a.transactions)) {
-            a.transactions.forEach(t => {
-              beneficios += t.taxedBenefit || 0;
-            });
+            a.transactions.forEach(t => { beneficios += t.taxedBenefit || 0; });
           }
         });
 
         const txList = transSnap.docs.map(d => d.data());
         setTransList(txList);
-        setAhorrosList(ahorrosListLocal);
-
+        setAhorrosList(ahorrosActivos);
         setStats({
-          usuariosActivos: ahorrosListLocal.length,
-          usuariosRetirados: retiradosSnap.data().count,
+          usuariosActivos: ahorrosActivos.length,
+          usuariosRetirados: totalRetirados,
           proximoAhorro,
           beneficios,
           barData: new Array(12).fill(0),
@@ -136,7 +139,6 @@ function General() {
       const meses = Array(12).fill(0);
       transList.forEach(t => {
         if (t.status !== "APPROVED") return;
-        if (!t.processUrl || t.processUrl.trim() === "") return;
         let fecha = null;
         if (t.date?.toDate) fecha = t.date.toDate();
         else if (t.date instanceof Date) fecha = t.date;
@@ -165,6 +167,8 @@ function General() {
     };
 
     const barData = tab === "ahorrado" ? buildAhorrado() : buildBeneficios();
+    const sumaBarras = barData.reduce((sum, v) => sum + v, 0);
+    setTotalBarras(sumaBarras);
     setStats(prev => ({ ...prev, barData }));
   }, [transList, ahorrosList, year, tab]);
 
@@ -178,7 +182,6 @@ function General() {
   return (
     <>
       <Carousel />
-
       <section className="dashboard-section">
         <h2 className="section-title">General</h2>
         <div className="stats-grid">
@@ -208,9 +211,11 @@ function General() {
         <div className="chart-card">
           <div className="dm-card-top">
             <div>
-              <p className="chart-title">Próxima Deposito</p>
+              <p className="chart-title">
+                {tab === "ahorrado" ? "Próxima Deposito" : `Beneficios acumulados ${year}`}
+              </p>
               <div className="chart-value">
-                <span>{formatMoney(tab === "ahorrado" ? stats.proximoAhorro : stats.beneficios)}</span>
+                <span>{formatMoney(tab === "ahorrado" ? stats.proximoAhorro : totalBarras)}</span>
               </div>
             </div>
             <div className="dm-card-controls">
@@ -281,31 +286,37 @@ export default function Dashboard() {
       return;
     }
     const routes = {
-      "General":                "/dashboard",
-      "Usuarios":               "/dashboard/usuarios",
-      "Ahorro":                 "/dashboard/ahorro",
-      "Ahorro nomina":          "/dashboard/ahorro/nomina",
-      "Detalle de movimientos": "/dashboard/ahorro/movimientos",
-      "Historial de novedades": "/dashboard/ahorro/novedades",
-      "Créditos":               "/dashboard/creditos",
-      "Crédito empresarial":    "/dashboard/credito-empresarial",
-      "Factoring":              "/dashboard/factoring",
-      "Confirming":             "/dashboard/confirming",
+      "General":                    "/dashboard",
+      "Usuarios":                   "/dashboard/usuarios",
+      "Ahorro":                     "/dashboard/ahorro",
+      "Ahorro nomina":              "/dashboard/ahorro/nomina",
+      "Detalle de movimientos":     "/dashboard/ahorro/movimientos",
+      "Historial de novedades":     "/dashboard/ahorro/novedades",
+      "Crédito":                    "/dashboard/solicitud-credito",
+      "Solicitud de crédito":       "/dashboard/solicitud-credito",
+      "Créditos":                   "/dashboard/creditos",
+      "Crédito empresarial":        "/dashboard/credito-empresarial",
+      "Factoring":                  "/dashboard/factoring",
+      "Confirming":                 "/dashboard/confirming",
+      "Inversiones":                "/dashboard/inversiones/renta-fija",
+      "Renta Fija":                 "/dashboard/inversiones/renta-fija",
     };
     if (routes[item]) navigate(routes[item]);
   };
 
   const getActiveItem = () => {
     const path = location.pathname;
-    if (path.includes("/ahorro/nomina"))       return "Ahorro nomina";
-    if (path.includes("/ahorro/movimientos"))  return "Detalle de movimientos";
-    if (path.includes("/ahorro/novedades"))    return "Historial de novedades";
-    if (path.includes("/ahorro"))              return "Ahorro";
-    if (path.includes("/usuarios"))            return "Usuarios";
-    if (path.includes("/creditos"))            return "Créditos";
-    if (path.includes("/credito-empresarial")) return "Crédito empresarial";
-    if (path.includes("/factoring"))           return "Factoring";
-    if (path.includes("/confirming"))          return "Confirming";
+    if (path.includes("/inversiones/renta-fija"))  return "Renta Fija";
+    if (path.includes("/ahorro/nomina"))            return "Ahorro nomina";
+    if (path.includes("/ahorro/movimientos"))       return "Detalle de movimientos";
+    if (path.includes("/ahorro/novedades"))         return "Historial de novedades";
+    if (path.includes("/ahorro"))                   return "Ahorro";
+    if (path.includes("/usuarios"))                 return "Usuarios";
+    if (path.includes("/solicitud-credito"))        return "Solicitud de crédito";
+    if (path.includes("/creditos"))                 return "Créditos";
+    if (path.includes("/credito-empresarial"))      return "Crédito empresarial";
+    if (path.includes("/factoring"))                return "Factoring";
+    if (path.includes("/confirming"))               return "Confirming";
     return "General";
   };
 
@@ -323,6 +334,8 @@ export default function Dashboard() {
           <Route path="/credito-empresarial" element={<ComingSoon name="Crédito empresarial" />} />
           <Route path="/factoring" element={<ComingSoon name="Factoring" />} />
           <Route path="/confirming" element={<ComingSoon name="Confirming" />} />
+          <Route path="/solicitud-credito" element={<SolicitudCredito />} />
+          <Route path="/inversiones/renta-fija" element={<RentaFija />} />
           <Route path="*" element={<General />} />
         </Routes>
       </main>

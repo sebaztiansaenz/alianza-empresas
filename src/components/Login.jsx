@@ -6,7 +6,7 @@ import { auth, db } from "../firebase";
 import { useUser } from "../UserContext";
 import "./Login.css";
 
-const VIDEO_URL = "https://firebasestorage.googleapis.com/v0/b/alianza-b7y88v.appspot.com/o/video_corporativo%20(1).mp4?alt=media&token=8c70952e-aa43-42f9-a74a-2d93ecad83d7";
+const VIDEO_URL = import.meta.env.VITE_VIDEO_URL || "https://firebasestorage.googleapis.com/v0/b/alianza-b7y88v.appspot.com/o/video_corporativo%20(1).mp4?alt=media&token=8c70952e-aa43-42f9-a74a-2d93ecad83d7";
 
 export default function Login({ onLogin }) {
   const [email, setEmail] = useState("");
@@ -110,7 +110,7 @@ export default function Login({ onLogin }) {
           <div className="login-logo">
             <div className="login-logo-icon">
               <img
-                src="https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/alianza-b7y88v/assets/0wo1ennxf6wk/Button.png"
+                src={import.meta.env.VITE_ORANGE_LOGO_URL || "https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/alianza-b7y88v/assets/0wo1ennxf6wk/Button.png"}
                 alt="Alianza logo"
                 style={{ width: '52px', height: '52px', borderRadius: '16px', objectFit: 'contain' }}
               />

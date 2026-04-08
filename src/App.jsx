@@ -9,7 +9,7 @@ import Dashboard from './components/Dashboard'
 import RecuperarContrasena from './components/RecuperarContrasena'
 import RegistroEmpresa from './components/RegistroEmpresa'
 
-const VIDEO_URL = "https://firebasestorage.googleapis.com/v0/b/alianza-b7y88v.appspot.com/o/video_corporativo%20(1).mp4?alt=media&token=8c70952e-aa43-42f9-a74a-2d93ecad83d7";
+const VIDEO_URL = import.meta.env.VITE_VIDEO_URL || "https://firebasestorage.googleapis.com/v0/b/alianza-b7y88v.appspot.com/o/video_corporativo%20(1).mp4?alt=media&token=8c70952e-aa43-42f9-a74a-2d93ecad83d7";
 
 function SplashScreen({ onFinish }) {
   const [progreso, setProgreso] = useState(0);

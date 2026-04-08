@@ -14,12 +14,12 @@ const TIPOS_DOC = [
 const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 const DIAS = ["L","M","X","J","V","S","D"];
 
-const FIRMAR_CONVENIO_URL = "https://firmar-convenio-1021628575366.europe-central2.run.app/firmarConvenio";
+const FIRMAR_CONVENIO_URL = import.meta.env.VITE_FIRMAR_CONVENIO_URL || "https://firmar-convenio-1021628575366.europe-central2.run.app/firmarConvenio";
 
-const LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/alianza-b7y88v.appspot.com/o/Alianza%20text%20logo.png?alt=media&token=924856ab-ed9b-4ae0-a653-7a6eb47143a1";
-const LOGO_BW_URL = "https://firebasestorage.googleapis.com/v0/b/alianza-b7y88v.appspot.com/o/Alianza%20pdf%20logo%20design.png?alt=media&token=52460c6f-9061-42c0-8681-aa5dc3db4c7a";
-const VERIFICATION_LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/alianza-b7y88v.appspot.com/o/validado_logo.png?alt=media&token=73edb90c-658a-4f6f-b2a7-33293a85542f";
-const ORANGE_LOGO_URL = "https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/alianza-b7y88v/assets/0wo1ennxf6wk/Button.png";
+const LOGO_URL = import.meta.env.VITE_LOGO_URL || "https://firebasestorage.googleapis.com/v0/b/alianza-b7y88v.appspot.com/o/Alianza%20text%20logo.png?alt=media&token=924856ab-ed9b-4ae0-a653-7a6eb47143a1";
+const LOGO_BW_URL = import.meta.env.VITE_LOGO_BW_URL || "https://firebasestorage.googleapis.com/v0/b/alianza-b7y88v.appspot.com/o/Alianza%20pdf%20logo%20design.png?alt=media&token=52460c6f-9061-42c0-8681-aa5dc3db4c7a";
+const VERIFICATION_LOGO_URL = import.meta.env.VITE_VERIFICATION_LOGO_URL || "https://firebasestorage.googleapis.com/v0/b/alianza-b7y88v.appspot.com/o/validado_logo.png?alt=media&token=73edb90c-658a-4f6f-b2a7-33293a85542f";
+const ORANGE_LOGO_URL = import.meta.env.VITE_ORANGE_LOGO_URL || "https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/alianza-b7y88v/assets/0wo1ennxf6wk/Button.png";
 
 async function fetchImageAsBase64(url) {
   const res = await fetch(url);

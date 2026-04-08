@@ -160,7 +160,6 @@ export default function AhorroNomina() {
       const snap = await getDocs(q);
       const ahorrosData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-      // Resolve user names from 'user' collection when available
       try {
         const userIds = Array.from(new Set(
           ahorrosData.map(a => (a.user && a.user.id) || a.uid || a.UserID).filter(Boolean)
@@ -169,12 +168,10 @@ export default function AhorroNomina() {
           const userDocs = await Promise.all(userIds.map(id => getDoc(doc(db, "user", id))));
           const usersMap = {};
           userDocs.forEach(u => { if (u.exists()) usersMap[u.id] = u.data(); });
-
-          // Merge resolved name into ahorro objects (prefer existing UserName)
           ahorrosData.forEach(a => {
             const uid = (a.user && a.user.id) || a.uid || a.UserID;
             const userDoc = uid ? usersMap[uid] : null;
-            const resolved = userDoc && (userDoc.display_name || userDoc.displayName || userDoc.UserName || userDoc.name || userDoc.displayName);
+            const resolved = userDoc && (userDoc.display_name || userDoc.displayName || userDoc.UserName || userDoc.name);
             if (!a.UserName && resolved) a.UserName = resolved;
           });
         }
@@ -209,7 +206,7 @@ export default function AhorroNomina() {
       (a.numeroDocumento || "").toLowerCase().includes(q);
     if (!matchesSearch) return false;
     if (stateFilter === "all") return true;
-    const isException = Boolean(a.excepcionPagoMes);
+    const isException = mismomes(a.excepcionPagoMes); // ✅ solo mes actual
     if (stateFilter === "activo") return !isException;
     if (stateFilter === "excepcion") return isException;
     return true;
@@ -226,11 +223,9 @@ export default function AhorroNomina() {
   const handleDescargar = async () => {
     setDescargando(true);
     setProgreso(0);
-
     try {
       const total = ahorros.length;
       if (total === 0) { setDescargando(false); return; }
-
       const rows = [];
       for (let i = 0; i < total; i++) {
         const a = ahorros[i];
@@ -241,41 +236,28 @@ export default function AhorroNomina() {
           "MONTO TOTAL AHORRADO": a.Total_Savings_PreApproval || 0,
           "ESTADO": mismomes(a.excepcionPagoMes) ? "Excepción única vez" : "Activo",
         });
-
-        // Actualizar progreso
         const pct = Math.round(((i + 1) / total) * 80);
         setProgreso(pct);
-
-        // Pequeña pausa para que React re-renderice
         if (i % 10 === 0) await new Promise(r => setTimeout(r, 10));
       }
-
       setProgreso(85);
       await new Promise(r => setTimeout(r, 50));
-
       const ws = XLSX.utils.json_to_sheet(rows);
-
-      // Ancho de columnas
       ws["!cols"] = [
-        { wch: 15 }, // ID
-        { wch: 30 }, // NOMBRE
-        { wch: 20 }, // TIPO
-        { wch: 25 }, // MONTO
-        { wch: 20 }, // ESTADO
+        { wch: 15 },
+        { wch: 30 },
+        { wch: 20 },
+        { wch: 25 },
+        { wch: 20 },
       ];
-
       setProgreso(92);
       await new Promise(r => setTimeout(r, 50));
-
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Reporte");
-
       setProgreso(97);
       await new Promise(r => setTimeout(r, 50));
-
       const timestamp = Date.now();
       XLSX.writeFile(wb, `reporte_empresa_${userData?.empresaId}_${timestamp}.xlsx`);
-
       setProgreso(100);
     } catch (err) {
       console.error(err);
@@ -367,7 +349,6 @@ export default function AhorroNomina() {
         />
       )}
 
-      {/* Header */}
       <div className="nomina-header">
         <h2 className="nomina-title">Ahorro nomina</h2>
         <div className="nomina-recurrencia">
@@ -387,7 +368,6 @@ export default function AhorroNomina() {
         </div>
       </div>
 
-      {/* Cards */}
       <div className="nomina-cards">
         <div className="nomina-card">
           <p className="nomina-card-label">Total usuarios</p>
@@ -399,7 +379,6 @@ export default function AhorroNomina() {
         </div>
       </div>
 
-      {/* Tabla */}
       <div className="nomina-table-card">
         <div className="nomina-table-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -411,7 +390,6 @@ export default function AhorroNomina() {
               style={{ height: 40, padding: '0 12px', borderRadius: 8, border: '1px solid rgba(38,38,50,0.08)' }}
             />
           </div>
-
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <select
               value={stateFilter}
@@ -422,7 +400,6 @@ export default function AhorroNomina() {
               <option value="activo">Activo</option>
               <option value="excepcion">Excepción de pago</option>
             </select>
-
             <button
               type="button"
               className="btn-descargar"
@@ -433,6 +410,7 @@ export default function AhorroNomina() {
             </button>
           </div>
         </div>
+
         <table className="nomina-table">
           <thead>
             <tr>
@@ -446,34 +424,44 @@ export default function AhorroNomina() {
             </tr>
           </thead>
           <tbody>
-            {paginados.map((a) => {
-              const esExcepcion = mismomes(a.excepcionPagoMes);
-              const base = a.Total_Savings_PreApproval || 0;
-              const aportado = recurrencia === "Quincenal" ? base / 2 : base;
-              return (
-                <tr key={a.id}>
-                  <td>{a.UserName || "-"}</td>
-                  <td>{a.userNIT || a.numeroDocumento || "-"}</td>
-                  <td>{a.SavingsType || "Ahorro nomina"}</td>
-                  <td>{formatMoney(base)}</td>
-                  <td>
-                    <span className={`badge ${esExcepcion ? "badge-excepcion" : "badge-activo"}`}>
-                      {esExcepcion ? "Excepción única vez" : "Activo"}
-                    </span>
-                  </td>
-                  <td>{formatMoney(aportado)}</td>
-                  <td>
-                    <button
-                      type="button"
-                      className="btn-accion"
-                      onClick={() => setModalAhorro(a)}
-                    >
-                      ⚙️
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
+            {paginados.length === 0 ? (
+              <tr>
+                <td colSpan={7} style={{ padding: "40px 24px", textAlign: "center", color: "#94a3b8", fontSize: 14 }}>
+                  {stateFilter === "excepcion"
+                    ? "No hay excepciones de pago este mes."
+                    : "No se encontraron resultados."}
+                </td>
+              </tr>
+            ) : (
+              paginados.map((a) => {
+                const esExcepcion = mismomes(a.excepcionPagoMes);
+                const base = a.Total_Savings_PreApproval || 0;
+                const aportado = recurrencia === "Quincenal" ? base / 2 : base;
+                return (
+                  <tr key={a.id}>
+                    <td>{a.UserName || "-"}</td>
+                    <td>{a.userNIT || a.numeroDocumento || "-"}</td>
+                    <td>{a.SavingsType || "Ahorro nomina"}</td>
+                    <td>{formatMoney(base)}</td>
+                    <td>
+                      <span className={`badge ${esExcepcion ? "badge-excepcion" : "badge-activo"}`}>
+                        {esExcepcion ? "Excepción única vez" : "Activo"}
+                      </span>
+                    </td>
+                    <td>{formatMoney(aportado)}</td>
+                    <td>
+                      <button
+                        type="button"
+                        className="btn-accion"
+                        onClick={() => setModalAhorro(a)}
+                      >
+                        ⚙️
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
 
@@ -492,18 +480,16 @@ export default function AhorroNomina() {
         )}
       </div>
 
-      {/* AvalPay */}
       <div className="nomina-aval-card">
         <div className="nomina-aval-left">
           <img src={AVAL_LOGO} alt="AvalPay" className="aval-logo" />
           <div className="aval-divider" />
-          <p className="aval-label">Total a pagar</p>
+          <p className="aval-label">Total a Depositar</p>
           <p className="aval-total">{formatMoney(montoTotal)}</p>
           <div className="aval-divider" />
         </div>
-
         <div className="nomina-aval-right">
-          <p className="aval-subtitle">Este pago corresponde a:</p>
+          <p className="aval-subtitle">Este deposito corresponde a:</p>
           <button
             type="button"
             className={`aval-date-btn ${fechaError ? "error" : ""}`}

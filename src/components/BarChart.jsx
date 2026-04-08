@@ -21,9 +21,10 @@ function calcYAxisIntervals(maxValue) {
 }
 
 function formatYLabel(value) {
-  if (value >= 1000000) return `${(value / 1000000).toFixed(value % 1000000 === 0 ? 0 : 1)}M`;
-  if (value >= 1000) return `${(value / 1000).toFixed(value % 1000 === 0 ? 0 : 1)}k`;
-  return value.toFixed(0);
+  const v = Math.round(value);
+  if (v >= 1000000) return `${Math.round(v / 1000000)}M`;
+  if (v >= 1000) return `${Math.round(v / 1000)}k`;
+  return `${v}`;
 }
 
 export default function BarChart({ data, labels }) {
@@ -57,7 +58,7 @@ export default function BarChart({ data, labels }) {
                 <div className="bc-bar-wrap">
                   {tooltip === i && (
                     <div className="bc-tooltip">
-                      ${Number(val).toLocaleString("es-CO")}
+                      $ {Math.round(val).toLocaleString("es-CO")}
                     </div>
                   )}
                   <div
