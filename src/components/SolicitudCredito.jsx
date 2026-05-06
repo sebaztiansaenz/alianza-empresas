@@ -46,7 +46,26 @@ function formatFecha(timestamp) {
   return fecha.toLocaleDateString("es-CO");
 }
 
-const GRID = "0.5fr 1.5fr 1fr 1fr 1.2fr 1fr 1fr 1fr 0.8fr 1fr";
+// 👈 nueva función tiempo transcurrido
+function tiempoTranscurrido(timestamp) {
+  if (!timestamp) return "-";
+  const fecha = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+  const ahora = new Date();
+  const diffMs = ahora - fecha;
+  if (diffMs < 0) return "-";
+
+  const minutos = Math.floor(diffMs / (1000 * 60));
+  const horas   = Math.floor(diffMs / (1000 * 60 * 60));
+  const dias    = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const meses   = Math.floor(dias / 30);
+
+  if (meses > 0)  return `${meses}mes ${dias % 30}d`;
+  if (dias > 0)   return `${dias}d ${horas % 24}h`;
+  if (horas > 0)  return `${horas}h ${minutos % 60}m`;
+  return `${minutos}m`;
+}
+
+const GRID = "0.5fr 1.5fr 1fr 1fr 1.2fr 1fr 1fr 1fr 0.8fr 0.8fr 1fr";
 
 export default function SolicitudCredito() {
   const { userData } = useUser();
@@ -79,7 +98,7 @@ export default function SolicitudCredito() {
               if (userSnap.exists()) {
                 const u = userSnap.data();
                 nombre = u.display_name || "-";
-                documento = u.nit ? `CC: ${u.nit}` : "-";
+                documento = u.nit ? u.nit : "-";
               }
             } catch { /* sin datos */ }
           }
@@ -95,6 +114,7 @@ export default function SolicitudCredito() {
             documento,
             tipoCredito: data.tipodecredito || "-",
             fechaSolicitud: formatFecha(data.fechaSolicitud),
+            fechaSolicitudRaw: data.fechaSolicitud, // 👈 para calcular tiempo
             empresa: data.empresa || "-",
             antiguedadEmpresa: data.antiguedadEmpresa || "-",
             antiguedadUsuario: calcularAntiguedad(data.createdTimeUsuario),
@@ -173,7 +193,7 @@ export default function SolicitudCredito() {
         </div>
       </div>
 
-      {/* Tabs a la derecha */}
+      {/* Tabs */}
       <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 16 }}>
         <div style={{ display: "flex", gap: 8, background: "#f8fafc", padding: 6, borderRadius: 14, border: "1px solid #e2e8f0" }}>
           {["Pendiente", "En Análisis"].map(tab => (
@@ -194,7 +214,7 @@ export default function SolicitudCredito() {
 
         {/* Header tabla */}
         <div style={{ display: "grid", gridTemplateColumns: GRID, background: "#fff", borderBottom: "1px solid #e2e8f0" }}>
-          {["ID", "Nombres y Apellidos", "Número de documento", "Fecha de solicitud", "Tipo de crédito", "Empresa", "Antigüedad empresa", "Antigüedad usuario", "Estado", "Acción"].map(col => (
+          {["ID", "Nombres y Apellidos", "Número de documento", "Fecha de solicitud", "Tipo de crédito", "Empresa", "Antigüedad empresa", "Antigüedad usuario", "Tiempo en espera", "Estado", "Acción"].map(col => (
             <div key={col} style={{ padding: "14px 16px", fontSize: 13, fontWeight: 500, color: "#64748b" }}>
               {col}
             </div>
@@ -227,6 +247,21 @@ export default function SolicitudCredito() {
               <div style={{ padding: "14px 16px", fontSize: 13, color: "#1e293b" }}>{s.empresa}</div>
               <div style={{ padding: "14px 16px", fontSize: 13, color: "#64748b" }}>{s.antiguedadEmpresa}</div>
               <div style={{ padding: "14px 16px", fontSize: 13, color: "#64748b" }}>{s.antiguedadUsuario}</div>
+
+              {/* 👈 Tiempo en espera */}
+              <div style={{ padding: "14px 16px" }}>
+                <span style={{
+                  background: "rgba(233,179,2,0.15)",
+                  color: "#b45309",
+                  padding: "4px 10px",
+                  borderRadius: 20,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  whiteSpace: "nowrap",
+                }}>
+                  {tiempoTranscurrido(s.fechaSolicitudRaw)}
+                </span>
+              </div>
 
               {/* Estado */}
               <div style={{ padding: "14px 16px" }}>

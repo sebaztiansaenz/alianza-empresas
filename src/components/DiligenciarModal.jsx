@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { doc, updateDoc, Timestamp } from "firebase/firestore";
+import { collection, doc, getDocs, query, setDoc, Timestamp, updateDoc, where } from "firebase/firestore";
 import { db } from "../firebase";
 
 function formatCOP(value) {
@@ -91,22 +91,22 @@ export default function DiligenciarModal({ solicitud, onClose, onSuccess }) {
   const [valorInternos, setValorInternos]   = useState("");
 
   // Estabilidad
-  const [fechaIngreso, setFechaIngreso]     = useState("");
-  const [contrato, setContrato]             = useState("indefinido");
+  const [fechaIngreso, setFechaIngreso]         = useState("");
+  const [contrato, setContrato]                 = useState("indefinido");
   const [fechaVencimiento, setFechaVencimiento] = useState("");
-  const [preaviso, setPreaviso]             = useState("no");
-  const [estadoCritico, setEstadoCritico]   = useState("no");
-  const [diasVacaciones, setDiasVacaciones] = useState("");
-  const [valorPrima, setValorPrima]         = useState("");
+  const [preaviso, setPreaviso]                 = useState("no");
+  const [estadoCritico, setEstadoCritico]       = useState("no");
+  const [diasVacaciones, setDiasVacaciones]     = useState("");
+  const [valorPrima, setValorPrima]             = useState("");
 
   // Fechas de corte
-  const [diasCorte, setDiasCorte]           = useState("");
+  const [diasCorte, setDiasCorte] = useState("");
 
   // UI
-  const [termsAccepted, setTermsAccepted]   = useState(false);
-  const [procesando, setProcesando]         = useState(false);
-  const [error, setError]                   = useState("");
-  const [showSuccess, setShowSuccess]       = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [procesando, setProcesando]       = useState(false);
+  const [error, setError]                 = useState("");
+  const [showSuccess, setShowSuccess]     = useState(false);
 
   const totalIngresos =
     parseCOP(salarioBase) +
@@ -130,9 +130,27 @@ export default function DiligenciarModal({ solicitud, onClose, onSuccess }) {
     setProcesando(true);
     setError("");
     try {
+
+      // 👈 calcular tiempo transcurrido desde la solicitud
+      const ahora = new Date();
+      const fechaSol = solicitud.fechaSolicitudRaw?.toDate?.() || new Date(solicitud.fechaSolicitudRaw || 0);
+      const diffMs = ahora - fechaSol;
+      const minutos = Math.floor(diffMs / (1000 * 60));
+      const horas   = Math.floor(diffMs / (1000 * 60 * 60));
+      const dias    = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      const meses   = Math.floor(dias / 30);
+
+      let tiempoEspera = "-";
+      if (meses > 0)       tiempoEspera = `${meses}mes ${dias % 30}d`;
+      else if (dias > 0)   tiempoEspera = `${dias}d ${horas % 24}h`;
+      else if (horas > 0)  tiempoEspera = `${horas}h ${minutos % 60}m`;
+      else                 tiempoEspera = `${minutos}m`;
+
       const perfilamientoData = {
         estado: "En analisis",
         fechaPerfilamiento: Timestamp.now(),
+        tiempoEspera,           // 👈 "2d 3h"
+        tiempoEsperaMs: diffMs, // 👈 en ms por si se necesita después
         // Ingresos
         salarioBase: parseCOP(salarioBase),
         comisionesSalariales: parseCOP(comisionesSal),
@@ -164,20 +182,43 @@ export default function DiligenciarModal({ solicitud, onClose, onSuccess }) {
         terminosAceptados: true,
       };
 
-      await Promise.all([
-        // 1. Actualiza creditoSolicitadoEmpresa
-        updateDoc(doc(db, "creditoSolicitadoEmpresa", solicitud.id), perfilamientoData),
-        // 2. Actualiza HabilitarCredito
-        updateDoc(doc(db, "HabilitarCredito", solicitud.id), {
-          estado: "En analisis",
-          fechaPerfilamiento: Timestamp.now(),
-        }),
-      ]);
+      const criticalSyncData = {
+        estado: "En estudio",
+        fechaPerfilamiento: Timestamp.now(),
+        tipodecredito: solicitud.tipoCredito || solicitud.tipodecredito || null,
+        tipoContrato: contrato,
+        empresa: solicitud.empresa || null,
+        empresaDocId: solicitud.empresaDocId || null,
+      };
+
+      await updateDoc(doc(db, "creditoSolicitadoEmpresa", solicitud.id), perfilamientoData);
+
+      try {
+        await updateDoc(doc(db, "HabilitarCredito", solicitud.id), criticalSyncData);
+      } catch (syncErr) {
+        const uidRef = solicitud.usuarioRef || solicitud.nombre || null;
+        if (uidRef) {
+          const q = query(collection(db, "HabilitarCredito"), where("uid", "==", uidRef));
+          const snap = await getDocs(q);
+          if (!snap.empty) {
+            await updateDoc(doc(db, "HabilitarCredito", snap.docs[0].id), criticalSyncData);
+          } else {
+            await setDoc(doc(db, "HabilitarCredito", solicitud.id), {
+              uid: uidRef,
+              nombre: uidRef,
+              id: solicitud.idNumerico || null,
+              ...criticalSyncData,
+            }, { merge: true });
+          }
+        } else {
+          throw syncErr;
+        }
+      }
 
       setShowSuccess(true);
     } catch (err) {
       console.error(err);
-      setError("Ocurrió un error al procesar. Intenta de nuevo.");
+      setError(`Ocurrió un error al procesar. ${err?.message || "Intenta de nuevo."}`);
     } finally {
       setProcesando(false);
     }
@@ -188,11 +229,11 @@ export default function DiligenciarModal({ solicitud, onClose, onSuccess }) {
     if (onSuccess) onSuccess();
   };
 
-  const sectionCard = { border: "1px solid #e2e8f0", borderRadius: 12, padding: "20px 24px", marginBottom: 16, background: "#fff" };
-  const gridRow = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16, marginBottom: 12 };
-  const inputGroup = { display: "flex", flexDirection: "column", gap: 6 };
-  const labelStyle = { fontSize: 12, fontWeight: 600, color: "#475569" };
-  const selectStyle = { padding: "10px 12px", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: 13, fontFamily: "inherit", outline: "none", color: "#1e293b", background: "#fff", width: "100%" };
+  const sectionCard    = { border: "1px solid #e2e8f0", borderRadius: 12, padding: "20px 24px", marginBottom: 16, background: "#fff" };
+  const gridRow        = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16, marginBottom: 12 };
+  const inputGroup     = { display: "flex", flexDirection: "column", gap: 6 };
+  const labelStyle     = { fontSize: 12, fontWeight: 600, color: "#475569" };
+  const selectStyle    = { padding: "10px 12px", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: 13, fontFamily: "inherit", outline: "none", color: "#1e293b", background: "#fff", width: "100%" };
   const conditionalBox = { marginTop: 10, padding: 14, background: "#fff7ed", borderLeft: "3px solid #f97316", borderRadius: "0 8px 8px 0" };
 
   return (
@@ -440,8 +481,8 @@ export default function DiligenciarModal({ solicitud, onClose, onSuccess }) {
               </button>
               <button
                 type="submit"
-                disabled={procesando || !termsAccepted}
-                style={{ flex: 2, padding: "13px", border: "none", borderRadius: 10, background: procesando || !termsAccepted ? "#94a3b8" : "#f97316", color: "white", fontSize: 14, fontWeight: 700, cursor: procesando || !termsAccepted ? "not-allowed" : "pointer", fontFamily: "inherit" }}
+                disabled={procesando}
+                style={{ flex: 2, padding: "13px", border: "none", borderRadius: 10, background: procesando ? "#94a3b8" : "#f97316", color: "white", fontSize: 14, fontWeight: 700, cursor: procesando ? "not-allowed" : "pointer", fontFamily: "inherit" }}
               >
                 {procesando ? "Procesando..." : "Procesar Perfilamiento"}
               </button>

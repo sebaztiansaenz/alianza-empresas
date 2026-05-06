@@ -85,15 +85,13 @@ function CalendarMini({ onSelect, onCancel, selected }) {
   );
 }
 
-// CORRECCIÓN: useEffect para el timer, error visible en OTP, loading local
 function OTPStep({ email, otp, onConfirm, onCancel }) {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [timer, setTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
-  const [loading, setLoading] = useState(false); // loading LOCAL al OTPStep
+  const [loading, setLoading] = useState(false);
 
-  // CORRECCIÓN: useEffect en lugar de useState para el timer
   useEffect(() => {
     const interval = setInterval(() => {
       setTimer(t => {
@@ -110,7 +108,6 @@ function OTPStep({ email, otp, onConfirm, onCancel }) {
       setError("Código incorrecto. Intenta de nuevo.");
       return;
     }
-    // CORRECCIÓN: loading local para mostrar estado y capturar errores aquí
     setLoading(true);
     setError("");
     try {
@@ -148,7 +145,6 @@ function OTPStep({ email, otp, onConfirm, onCancel }) {
               }
             }}
             onKeyDown={e => {
-              // CORRECCIÓN: backspace navega al input anterior
               if (e.key === "Backspace" && !code[i] && i > 0) {
                 document.getElementById(`otp-${i-1}`)?.focus();
               }
@@ -157,7 +153,6 @@ function OTPStep({ email, otp, onConfirm, onCancel }) {
         ))}
       </div>
 
-      {/* CORRECCIÓN: error visible dentro del OTPStep */}
       {error && <p className="otp-error">{error}</p>}
 
       <div className="otp-resend">
@@ -170,7 +165,7 @@ function OTPStep({ email, otp, onConfirm, onCancel }) {
               setError("");
               setTimer(60);
               setCanResend(false);
-              onCancel(); // vuelve a enviar
+              onCancel();
             }
           }}
         >
@@ -194,18 +189,15 @@ export default function ExcepcionModal({ ahorro, onClose, onSuccess }) {
   const { userData } = useUser();
   const [tab, setTab] = useState("excepcion");
 
-  // Excepción
   const [motivoExcepcion, setMotivoExcepcion] = useState("");
   const [fechaExcepcion, setFechaExcepcion] = useState(null);
   const [showCalExcepcion, setShowCalExcepcion] = useState(false);
 
-  // Eliminar
   const [motivoEliminar, setMotivoEliminar] = useState("");
   const [otroMotivo, setOtroMotivo] = useState("");
   const [fechaEliminar, setFechaEliminar] = useState(null);
   const [showCalEliminar, setShowCalEliminar] = useState(false);
 
-  // OTP
   const [showOTP, setShowOTP] = useState(false);
   const [otp, setOtp] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -232,17 +224,16 @@ export default function ExcepcionModal({ ahorro, onClose, onSuccess }) {
     setOtp(newOtp);
 
     try {
-      await fetch(`${API_URL}/send-otp`, {
+      await fetch(`${API_URL}/send-otp-excepcion`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: userData?.email,
-          otp: newOtp,
-          nombreUsuario: ahorro?.UserName || "Usuario",
-          tipoOperacion: tab === "excepcion" ? "Excepción de pago" : "Retiro de usuario",
-          valorTransaccion: formatMoney(ahorro?.Total_Savings_PreApproval),
-          idTransaccion: ahorro?.id || "N/A",
-          detallesTransaccion: motivo,
+          otpCode: newOtp,
+          companyName: ahorro?.CompayName || "Empresa",
+          employeeName: ahorro?.UserName || "Usuario",
+          docType: "Cédula de ciudadanía",
+          docNumber: ahorro?.userNIT || "N/A",
         }),
       });
       setShowOTP(true);
@@ -253,7 +244,6 @@ export default function ExcepcionModal({ ahorro, onClose, onSuccess }) {
     }
   };
 
-  // CORRECCIÓN: async que lanza error para que OTPStep lo capture
   const handleConfirmExcepcion = async () => {
     await updateDoc(doc(db, "ahorros", ahorro.id), {
       excepcionPagoMes: new Date(),
@@ -271,13 +261,28 @@ export default function ExcepcionModal({ ahorro, onClose, onSuccess }) {
       empresaid: userData?.empresaRef,
       idnovedad: Math.floor(100000 + Math.random() * 900000),
     });
+
+    // ✅ Email confirmación excepción
+    await fetch(`${API_URL}/send-excepcion`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: ahorro?.UserEmail,
+        collaboratorName: ahorro?.UserName,
+        companyName: ahorro?.CompayName || "Empresa",
+        collaboratorFullName: ahorro?.UserName,
+        documentType: "Cédula de ciudadanía",
+        documentNumber: ahorro?.userNIT || "N/A",
+      }),
+    });
+
     onSuccess?.("excepcion");
     onClose();
   };
 
-  // CORRECCIÓN: async que lanza error para que OTPStep lo capture
   const handleConfirmEliminar = async () => {
     const motivo = motivoEliminar === "Otros" ? otroMotivo : motivoEliminar;
+
     await addDoc(collection(db, "NovedadesAhorros"), {
       usuarioRef: ahorro.user,
       nombreusuario: ahorro.UserName,
@@ -294,6 +299,21 @@ export default function ExcepcionModal({ ahorro, onClose, onSuccess }) {
     await updateDoc(doc(db, "ahorros", ahorro.id), {
       company: null,
     });
+
+    // ✅ Email confirmación desvinculación
+    await fetch(`${API_URL}/send-desvinculacion`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: ahorro?.UserEmail,
+        collaboratorName: ahorro?.UserName,
+        companyName: ahorro?.CompayName || "Empresa",
+        collaboratorFullName: ahorro?.UserName,
+        documentType: "Cédula de ciudadanía",
+        documentNumber: ahorro?.userNIT || "N/A",
+      }),
+    });
+
     onSuccess?.("eliminar");
     onClose();
   };
@@ -328,7 +348,6 @@ export default function ExcepcionModal({ ahorro, onClose, onSuccess }) {
 
         {!showOTP ? (
           <div className="excepcion-body">
-
             {tab === "excepcion" && (
               <div className="excepcion-form">
                 <div className="exc-field-box">
@@ -405,7 +424,6 @@ export default function ExcepcionModal({ ahorro, onClose, onSuccess }) {
             >
               {loading ? "Enviando..." : "Enviar código"}
             </button>
-
           </div>
         ) : (
           <OTPStep

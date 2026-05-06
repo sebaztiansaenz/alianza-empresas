@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, getDoc, writeBatch } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
 import * as XLSX from "xlsx";
 import { db, functions } from "../firebase";
@@ -124,6 +124,71 @@ function ProgressModal({ progress, onClose }) {
   );
 }
 
+// ✅ NUEVO: Modal de confirmación de pago (SOLO PARA TEST)
+function ConfirmarPagoModal({ onConfirm, onCancel, loading, excepcionesCount }) {
+  return (
+    <div className="progress-overlay">
+      <div className="progress-modal">
+        <div style={{ background: '#FEF3C7', padding: '12px 16px', borderRadius: 12, marginBottom: 16, border: '1px solid #FDE68A' }}>
+          <p style={{ fontSize: 13, color: '#92400E', margin: 0, textAlign: 'center', fontWeight: 600 }}>
+            ⚠️ BOTÓN DE TEST - No usar en producción
+          </p>
+        </div>
+        <p className="progress-title">Simular Pago Exitoso</p>
+        <p style={{ fontSize: 14, color: '#64748b', textAlign: 'center', margin: '8px 0' }}>
+          Esto limpiará las excepciones del mes actual sin realizar un pago real.
+        </p>
+        {excepcionesCount > 0 ? (
+          <div style={{ 
+            background: '#FFF7ED', 
+            padding: '12px 16px', 
+            borderRadius: 12, 
+            marginTop: 12,
+            border: '1px solid #FFEDD5'
+          }}>
+            <p style={{ fontSize: 13, color: '#9A3412', margin: 0, textAlign: 'center' }}>
+              <strong>{excepcionesCount}</strong> usuario{excepcionesCount > 1 ? 's' : ''} con excepción 
+              {excepcionesCount > 1 ? ' volverán' : ' volverá'} a estado Activo
+            </p>
+          </div>
+        ) : (
+          <div style={{ 
+            background: '#F1F5F9', 
+            padding: '12px 16px', 
+            borderRadius: 12, 
+            marginTop: 12,
+            border: '1px solid #E2E8F0'
+          }}>
+            <p style={{ fontSize: 13, color: '#475569', margin: 0, textAlign: 'center' }}>
+              No hay excepciones del mes actual para limpiar
+            </p>
+          </div>
+        )}
+        <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
+          <button
+            type="button"
+            className="btn-progress-close"
+            style={{ background: '#94a3b8', flex: 1 }}
+            onClick={onCancel}
+            disabled={loading}
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            className="btn-progress-close"
+            style={{ flex: 1 }}
+            onClick={onConfirm}
+            disabled={loading || excepcionesCount === 0}
+          >
+            {loading ? 'Procesando...' : 'Simular Pago'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AhorroNomina() {
   const { userData } = useUser();
   const [ahorros, setAhorros] = useState([]);
@@ -141,6 +206,10 @@ export default function AhorroNomina() {
   const [progreso, setProgreso] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [stateFilter, setStateFilter] = useState("all");
+  
+  // ✅ NUEVO: Estados para simulación de pago (TEST)
+  const [showConfirmarPago, setShowConfirmarPago] = useState(false);
+  const [procesandoPago, setProcesandoPago] = useState(false);
 
   const fetchData = async () => {
     if (!userData?.empresaRef) return;
@@ -172,7 +241,7 @@ export default function AhorroNomina() {
             const uid = (a.user && a.user.id) || a.uid || a.UserID;
             const userDoc = uid ? usersMap[uid] : null;
             const resolved = userDoc && (userDoc.display_name || userDoc.displayName || userDoc.UserName || userDoc.name);
-            if (!a.UserName && resolved) a.UserName = resolved;
+            if (resolved) a.UserName = resolved;
           });
         }
       } catch (err) {
@@ -192,6 +261,7 @@ export default function AhorroNomina() {
   }, [userData]);
 
   const activos = ahorros.filter(a => !mismomes(a.excepcionPagoMes));
+  const excepcionesActuales = ahorros.filter(a => mismomes(a.excepcionPagoMes));
 
   const montoTotal = activos.reduce((sum, a) => {
     const base = a.Total_Savings_PreApproval || 0;
@@ -206,7 +276,7 @@ export default function AhorroNomina() {
       (a.numeroDocumento || "").toLowerCase().includes(q);
     if (!matchesSearch) return false;
     if (stateFilter === "all") return true;
-    const isException = mismomes(a.excepcionPagoMes); // ✅ solo mes actual
+    const isException = mismomes(a.excepcionPagoMes);
     if (stateFilter === "activo") return !isException;
     if (stateFilter === "excepcion") return isException;
     return true;
@@ -316,6 +386,46 @@ export default function AhorroNomina() {
     }
   };
 
+  // ✅ NUEVO: Función para simular pago exitoso y limpiar excepciones (SOLO TEST)
+  const handleSimularPago = async () => {
+    if (excepcionesActuales.length === 0) {
+      setShowConfirmarPago(false);
+      setMensaje("No hay excepciones del mes actual para limpiar.");
+      setTimeout(() => setMensaje(""), 3000);
+      return;
+    }
+
+    setProcesandoPago(true);
+    try {
+      const batch = writeBatch(db);
+      
+      // Limpiar excepcionPagoMes de todos los ahorros con excepción del mes actual
+      excepcionesActuales.forEach(a => {
+        const ahorroRef = doc(db, "ahorros", a.id);
+        batch.update(ahorroRef, {
+          excepcionPagoMes: null
+        });
+      });
+
+      await batch.commit();
+      
+      setShowConfirmarPago(false);
+      setMensaje(`✓ TEST: ${excepcionesActuales.length} usuario${excepcionesActuales.length > 1 ? 's volvieron' : ' volvió'} a estado Activo.`);
+      
+      // Recargar datos
+      await fetchData();
+      
+      // Limpiar mensaje después de 5 segundos
+      setTimeout(() => setMensaje(""), 5000);
+    } catch (err) {
+      console.error(err);
+      setMensaje("Error al procesar. Intenta de nuevo.");
+      setTimeout(() => setMensaje(""), 3000);
+    } finally {
+      setProcesandoPago(false);
+    }
+  };
+
   if (loading) return (
     <div className="nomina-loading">
       <div className="loading-spinner" />
@@ -346,6 +456,16 @@ export default function AhorroNomina() {
         <ProgressModal
           progress={progreso}
           onClose={() => { setDescargando(false); setProgreso(0); }}
+        />
+      )}
+
+      {/* ✅ NUEVO: Modal de simulación de pago (TEST) */}
+      {showConfirmarPago && (
+        <ConfirmarPagoModal
+          onConfirm={handleSimularPago}
+          onCancel={() => setShowConfirmarPago(false)}
+          loading={procesandoPago}
+          excepcionesCount={excepcionesActuales.length}
         />
       )}
 
@@ -400,6 +520,18 @@ export default function AhorroNomina() {
               <option value="activo">Activo</option>
               <option value="excepcion">Excepción de pago</option>
             </select>
+            {/* ✅ BOTÓN DE TEST - Eliminar en producción */}
+            {excepcionesActuales.length > 0 && (
+              <button
+                type="button"
+                className="btn-descargar"
+                style={{ background: '#F59E0B', borderRadius: 8 }}
+                onClick={() => setShowConfirmarPago(true)}
+                title="Solo para testing - eliminar en producción"
+              >
+                🧪 TEST: Simular Pago
+              </button>
+            )}
             <button
               type="button"
               className="btn-descargar"
@@ -499,7 +631,7 @@ export default function AhorroNomina() {
             <span>▾</span>
           </button>
           {fechaError && <p className="aval-error">Datos obligatorios</p>}
-          {mensaje && <p className="aval-error">{mensaje}</p>}
+          {mensaje && <p className="aval-error" style={{ color: mensaje.startsWith('✓') ? '#10b981' : '#FF4F4F' }}>{mensaje}</p>}
           <button type="button" className="btn-depositar" onClick={handleDepositar} disabled={depositando}>
             {depositando ? "Procesando..." : "Depositar"}
           </button>
