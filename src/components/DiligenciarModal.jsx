@@ -31,19 +31,12 @@ function MoneyInput({ placeholder = "$ 0", value, onChange }) {
   );
 }
 
-function SectionHeader({ number, title, total }) {
+function SectionHeader({ number, title }) {
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-      <div>
-        <span style={{ fontWeight: 700, color: "#1e3a8a", borderBottom: "2px solid #f97316", display: "inline-block", paddingBottom: 4, fontSize: 14 }}>
-          {number}. {title}
-        </span>
-      </div>
-      {total > 0 && (
-        <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 20, padding: "4px 14px", fontSize: 13, fontWeight: 600, color: "#16a34a" }}>
-          $ {formatCOP(total)}
-        </div>
-      )}
+    <div style={{ marginBottom: 16 }}>
+      <span style={{ fontWeight: 700, color: "#1e3a8a", borderBottom: "2px solid #f97316", display: "inline-block", paddingBottom: 4, fontSize: 14 }}>
+        {number}. {title}
+      </span>
     </div>
   );
 }
@@ -118,8 +111,6 @@ export default function DiligenciarModal({ solicitud, onClose, onSuccess }) {
     (embargos ? parseCOP(valorEmbargos) : 0) +
     (libranzas ? parseCOP(valorLibranzas) : 0) +
     (internos ? parseCOP(valorInternos) : 0);
-
-  const totalRespaldo = parseCOP(valorPrima);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -273,25 +264,12 @@ export default function DiligenciarModal({ solicitud, onClose, onSuccess }) {
             </div>
           </div>
 
-          {/* Resumen rápido */}
-          <div style={{ background: "#fff", borderBottom: "1px solid #e2e8f0", padding: "12px 28px", display: "flex", gap: 24, flexShrink: 0, flexWrap: "wrap" }}>
-            <div style={{ textAlign: "center" }}>
-              <p style={{ margin: 0, fontSize: 11, color: "#64748b", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Total ingresos</p>
-              <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#16a34a" }}>$ {formatCOP(totalIngresos)}</p>
-            </div>
-            <div style={{ width: 1, background: "#e2e8f0" }} />
-            <div style={{ textAlign: "center" }}>
-              <p style={{ margin: 0, fontSize: 11, color: "#64748b", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Total descuentos</p>
-              <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#dc2626" }}>$ {formatCOP(totalDescuentos)}</p>
-            </div>
-          </div>
-
           {/* Formulario */}
           <form onSubmit={handleSubmit} style={{ overflowY: "auto", padding: "20px 28px", flex: 1 }}>
 
             {/* 1. Ingresos */}
             <div style={sectionCard}>
-              <SectionHeader number="1" title="Ingresos Mensuales" total={totalIngresos} />
+              <SectionHeader number="1" title="Ingresos Mensuales" />
               <div style={gridRow}>
                 <div style={inputGroup}>
                   <label style={labelStyle}>Salario Básico (Base salud/pensión)</label>
@@ -327,7 +305,7 @@ export default function DiligenciarModal({ solicitud, onClose, onSuccess }) {
 
             {/* 2. Descuentos */}
             <div style={sectionCard}>
-              <SectionHeader number="2" title="Descuentos y Obligaciones" total={totalDescuentos} />
+              <SectionHeader number="2" title="Descuentos y Obligaciones" />
               <div style={gridRow}>
                 <div style={inputGroup}>
                   <label style={labelStyle}>¿Tiene embargos judiciales?</label>
@@ -393,7 +371,7 @@ export default function DiligenciarModal({ solicitud, onClose, onSuccess }) {
 
             {/* 3. Estabilidad */}
             <div style={sectionCard}>
-              <SectionHeader number="3" title="Estabilidad Laboral y Respaldo" total={totalRespaldo} />
+              <SectionHeader number="3" title="Estabilidad Laboral y Respaldo" />
               <div style={gridRow}>
                 <div style={inputGroup}>
                   <label style={labelStyle}>Fecha de Ingreso</label>
@@ -411,7 +389,7 @@ export default function DiligenciarModal({ solicitud, onClose, onSuccess }) {
                   </select>
                 </div>
               </div>
-              {(contrato === "fijo" || contrato === "obra") && (
+              {contrato !== "indefinido" && (
                 <div style={{ ...conditionalBox, marginBottom: 12 }}>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                     <div style={inputGroup}>
@@ -449,7 +427,7 @@ export default function DiligenciarModal({ solicitud, onClose, onSuccess }) {
 
             {/* 4. Fechas de corte */}
             <div style={sectionCard}>
-              <SectionHeader number="4" title="Fechas de corte y/o novedad" total={0} />
+              <SectionHeader number="4" title="Fechas de corte y/o novedad" />
               <div style={gridRow}>
                 <div style={inputGroup}>
                   <label style={labelStyle}>Días de cierre de novedades (Corte)</label>

@@ -49,7 +49,7 @@ const menuItems = [
       {
         label: "Crédito",
         icon: <IconCredito />,
-        submenu: ["Solicitud de crédito"],
+        submenu: ["Solicitud de crédito", "Cartera"],
       },
     ],
   },
