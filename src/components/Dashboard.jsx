@@ -99,7 +99,16 @@ function General() {
           getDocs(transQuery),
         ]);
 
-        const ahorrosListLocal = ahorrosSnap.docs.map(d => d.data());
+        const ahorrosListLocal = ahorrosSnap.docs
+          .map(d => d.data())
+          .filter(a => {
+            if (a.nominaActiva === true) return true;
+            const t = String(a.SavingsType || "")
+              .toLowerCase()
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "");
+            return t.includes("nomina");
+          });
         const retiradosUIDs = new Set(
           retiradosSnap.docs.map(d => d.data().usuarioRef?.id).filter(Boolean)
         );

@@ -227,7 +227,17 @@ export default function AhorroNomina() {
         where("AhorrosDocPdf1", "!=", "")
       );
       const snap = await getDocs(q);
-      const ahorrosData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const ahorrosData = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .filter(a => {
+          // Propósito unificado (nominaActiva) o línea legacy de nómina.
+          if (a.nominaActiva === true) return true;
+          const t = String(a.SavingsType || "")
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "");
+          return t.includes("nomina");
+        });
 
       try {
         const userIds = Array.from(new Set(
