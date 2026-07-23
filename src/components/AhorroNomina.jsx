@@ -227,7 +227,17 @@ export default function AhorroNomina() {
         where("AhorrosDocPdf1", "!=", "")
       );
       const snap = await getDocs(q);
-      const ahorrosData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const ahorrosData = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .filter(a => {
+          // Propósito unificado (nominaActiva) o línea legacy de nómina.
+          if (a.nominaActiva === true) return true;
+          const t = String(a.SavingsType || "")
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "");
+          return t.includes("nomina");
+        });
 
       try {
         const userIds = Array.from(new Set(
@@ -240,8 +250,20 @@ export default function AhorroNomina() {
           ahorrosData.forEach(a => {
             const uid = (a.user && a.user.id) || a.uid || a.UserID;
             const userDoc = uid ? usersMap[uid] : null;
-            const resolved = userDoc && (userDoc.display_name || userDoc.displayName || userDoc.UserName || userDoc.name);
+            if (!userDoc) return;
+            const resolved = userDoc.display_name || userDoc.displayName || userDoc.UserName || userDoc.name;
             if (resolved) a.UserName = resolved;
+            // Documento del afiliado: en propósito unificado a veces falta userNIT en el ahorro.
+            const doc =
+              userDoc.nit ||
+              userDoc.nroDocumento ||
+              userDoc.numeroDocumento ||
+              userDoc.documento ||
+              userDoc.cedula ||
+              "";
+            if (doc && !(a.userNIT || a.numeroDocumento)) {
+              a.userNIT = String(doc);
+            }
           });
         }
       } catch (err) {

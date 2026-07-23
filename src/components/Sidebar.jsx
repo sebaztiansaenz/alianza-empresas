@@ -37,6 +37,111 @@ const IconInversiones = () => (
   </svg>
 );
 
+const profileIconProps = {
+  width: 18,
+  height: 18,
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "#1d4ed8",
+  strokeWidth: "1.8",
+  strokeLinecap: "round",
+  strokeLinejoin: "round",
+};
+
+const IconBuilding = () => (
+  <svg {...profileIconProps}>
+    <path d="M4 21h16" />
+    <path d="M6 21V7l6-3 6 3v14" />
+    <path d="M10 11h1M13 11h1M10 15h1M13 15h1" />
+    <path d="M11 21v-4h2v4" />
+  </svg>
+);
+
+const IconIdCard = () => (
+  <svg {...profileIconProps}>
+    <rect x="3" y="5" width="18" height="14" rx="2" />
+    <circle cx="9" cy="12" r="2" />
+    <path d="M14 10h4M14 14h3" />
+  </svg>
+);
+
+const IconPhone = () => (
+  <svg {...profileIconProps}>
+    <path d="M7 3h4l1.5 4-2.5 1.5a12 12 0 0 0 5.5 5.5L17.5 11.5 21.5 13v4a2 2 0 0 1-2 2A15 15 0 0 1 5 5a2 2 0 0 1 2-2z" />
+  </svg>
+);
+
+const IconGlobe = () => (
+  <svg {...profileIconProps}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
+  </svg>
+);
+
+const IconCity = () => (
+  <svg {...profileIconProps}>
+    <path d="M4 21V10l5-3v14M9 21V7l6-3v17M15 21V11l5 2v8" />
+    <path d="M6.5 13h1M6.5 16h1M11.5 11h1M11.5 14h1M17.5 15h1M17.5 18h1" />
+  </svg>
+);
+
+const IconBriefcase = () => (
+  <svg {...profileIconProps}>
+    <rect x="3" y="8" width="18" height="12" rx="2" />
+    <path d="M8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18" />
+  </svg>
+);
+
+const IconUsers = () => (
+  <svg {...profileIconProps}>
+    <circle cx="9" cy="8" r="3" />
+    <path d="M3 20v-1a5 5 0 0 1 10 0v1" />
+    <circle cx="17" cy="9" r="2.5" />
+    <path d="M21 20v-1a4 4 0 0 0-3-3.87" />
+  </svg>
+);
+
+const IconMapPin = () => (
+  <svg {...profileIconProps}>
+    <path d="M12 21s-7-5.5-7-11a7 7 0 1 1 14 0c0 5.5-7 11-7 11z" />
+    <circle cx="12" cy="10" r="2.5" />
+  </svg>
+);
+
+const IconMail = () => (
+  <svg {...profileIconProps}>
+    <rect x="3" y="5" width="18" height="14" rx="2" />
+    <path d="M3 7l9 7 9-7" />
+  </svg>
+);
+
+const IconLink = () => (
+  <svg {...profileIconProps}>
+    <path d="M10 13a5 5 0 0 0 7.07 0l2.12-2.12a5 5 0 0 0-7.07-7.07L10.5 5.43" />
+    <path d="M14 11a5 5 0 0 0-7.07 0L4.8 13.12a5 5 0 0 0 7.07 7.07L13.5 18.57" />
+  </svg>
+);
+
+const IconPerson = () => (
+  <svg {...profileIconProps}>
+    <circle cx="12" cy="8" r="3.5" />
+    <path d="M5 20v-1a7 7 0 0 1 14 0v1" />
+  </svg>
+);
+
+const IconHash = () => (
+  <svg {...profileIconProps}>
+    <path d="M5 9h14M5 15h14M10 3l-2 18M16 3l-2 18" />
+  </svg>
+);
+
+const IconLogout = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4" />
+    <path d="M16 8l4 4-4 4M20 12H10" />
+  </svg>
+);
+
 const menuItems = [
   {
     section: "PERSONAS",
@@ -125,17 +230,17 @@ function ProfileModal({ onClose, userData }) {
               <h3 className="modal-section-title">Datos de la empresa</h3>
               <div className="modal-divider" />
               <div className="modal-grid">
-                <Field icon="🏢" label="Razón Social" value={empresa?.razonsocial} />
-                <Field icon="🪪" label="NIT" value={empresa?.nit} />
-                <Field icon="📞" label="Teléfono 1" value={empresa?.telefono1} />
-                <Field icon="📞" label="Teléfono 2" value={empresa?.telefono2} />
-                <Field icon="🌎" label="País" value={empresa?.pais} />
-                <Field icon="🏙️" label="Ciudad" value={empresa?.ciudad} />
-                <Field icon="⚙️" label="Actividad" value={empresa?.actividad} />
-                <Field icon="👥" label="Empleados" value={empresa?.numeroEmpleados} />
-                <Field icon="📍" label="Dirección" value={empresa?.direccion} />
-                <Field icon="✉️" label="Email" value={empresa?.correo} />
-                <Field icon="🌐" label="Sitio web" value={empresa?.web} />
+                <Field icon={<IconBuilding />} label="Razón Social" value={empresa?.razonsocial} />
+                <Field icon={<IconIdCard />} label="NIT" value={empresa?.nit} />
+                <Field icon={<IconPhone />} label="Teléfono 1" value={empresa?.telefono1} />
+                <Field icon={<IconPhone />} label="Teléfono 2" value={empresa?.telefono2} />
+                <Field icon={<IconGlobe />} label="País" value={empresa?.pais} />
+                <Field icon={<IconCity />} label="Ciudad" value={empresa?.ciudad} />
+                <Field icon={<IconBriefcase />} label="Actividad" value={empresa?.actividad} />
+                <Field icon={<IconUsers />} label="Empleados" value={empresa?.numeroEmpleados} />
+                <Field icon={<IconMapPin />} label="Dirección" value={empresa?.direccion} />
+                <Field icon={<IconMail />} label="Email" value={empresa?.correo} />
+                <Field icon={<IconLink />} label="Sitio web" value={empresa?.web} />
               </div>
             </div>
             {representante && (
@@ -143,16 +248,17 @@ function ProfileModal({ onClose, userData }) {
                 <h3 className="modal-section-title">Representante legal</h3>
                 <div className="modal-divider" />
                 <div className="modal-grid">
-                  <Field icon="👤" label="Apellidos y Nombres" value={representante?.name} />
-                  <Field icon="✉️" label="Correo electrónico" value={representante?.email} />
-                  <Field icon="🪪" label="Tipo de documento" value={representante?.typoDeDocumento} />
-                  <Field icon="🔢" label="Número de documento" value={representante?.numeroDeDocumento} />
+                  <Field icon={<IconPerson />} label="Apellidos y Nombres" value={representante?.name} />
+                  <Field icon={<IconMail />} label="Correo electrónico" value={representante?.email} />
+                  <Field icon={<IconIdCard />} label="Tipo de documento" value={representante?.typoDeDocumento} />
+                  <Field icon={<IconHash />} label="Número de documento" value={representante?.numeroDeDocumento} />
                 </div>
               </div>
             )}
             <div className="modal-logout">
               <button className="btn-logout" onClick={handleLogout}>
-                🚪 Cerrar Sesión
+                <IconLogout />
+                Cerrar Sesión
               </button>
             </div>
           </>
