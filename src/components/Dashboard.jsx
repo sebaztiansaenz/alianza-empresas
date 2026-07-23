@@ -11,6 +11,7 @@ import HistorialNovedades from "./HistorialNovedades";
 import BarChart from "./BarChart";
 import FirmarConvenioModal from "./FirmarConvenioModal";
 import SolicitudCredito from "./SolicitudCredito";
+import CarteraCredito from "./CarteraCredito";
 import RentaFija from "./RentaFija";
 import "./Dashboard.css";
 
@@ -98,7 +99,16 @@ function General() {
           getDocs(transQuery),
         ]);
 
-        const ahorrosListLocal = ahorrosSnap.docs.map(d => d.data());
+        const ahorrosListLocal = ahorrosSnap.docs
+          .map(d => d.data())
+          .filter(a => {
+            if (a.nominaActiva === true) return true;
+            const t = String(a.SavingsType || "")
+              .toLowerCase()
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "");
+            return t.includes("nomina");
+          });
         const retiradosUIDs = new Set(
           retiradosSnap.docs.map(d => d.data().usuarioRef?.id).filter(Boolean)
         );
@@ -294,6 +304,7 @@ export default function Dashboard() {
       "Historial de novedades":     "/dashboard/ahorro/novedades",
       "Crédito":                    "/dashboard/solicitud-credito",
       "Solicitud de crédito":       "/dashboard/solicitud-credito",
+      "Cartera":                    "/dashboard/cartera",
       "Créditos":                   "/dashboard/creditos",
       "Crédito empresarial":        "/dashboard/credito-empresarial",
       "Factoring":                  "/dashboard/factoring",
@@ -313,6 +324,7 @@ export default function Dashboard() {
     if (path.includes("/ahorro"))                   return "Ahorro";
     if (path.includes("/usuarios"))                 return "Usuarios";
     if (path.includes("/solicitud-credito"))        return "Solicitud de crédito";
+    if (path.includes("/cartera"))                   return "Cartera";
     if (path.includes("/creditos"))                 return "Créditos";
     if (path.includes("/credito-empresarial"))      return "Crédito empresarial";
     if (path.includes("/factoring"))                return "Factoring";
@@ -335,6 +347,7 @@ export default function Dashboard() {
           <Route path="/factoring" element={<ComingSoon name="Factoring" />} />
           <Route path="/confirming" element={<ComingSoon name="Confirming" />} />
           <Route path="/solicitud-credito" element={<SolicitudCredito />} />
+          <Route path="/cartera" element={<CarteraCredito />} />
           <Route path="/inversiones/renta-fija" element={<RentaFija />} />
           <Route path="*" element={<General />} />
         </Routes>

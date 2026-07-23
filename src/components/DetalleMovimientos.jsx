@@ -78,7 +78,16 @@ export default function DetalleMovimientos() {
           where("AhorrosDocPdf1", "!=", "")
         );
         const ahSnap = await getDocs(ahQ);
-        const ahList = ahSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        const ahList = ahSnap.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .filter(a => {
+            if (a.nominaActiva === true) return true;
+            const t = String(a.SavingsType || "")
+              .toLowerCase()
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "");
+            return t.includes("nomina");
+          });
         setAhorros(ahList);
       } catch (err) {
         console.error(err);
